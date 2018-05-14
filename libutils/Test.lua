@@ -1,4 +1,3 @@
---package.cpath = "D:/workspace/visual-studio/2017/repos/libutils/x64/Debug/?.dll"
 package.cpath = "D:/workspace/github/libutils/x64/Debug/?.dll"
 
 local libutils = require("libutils")

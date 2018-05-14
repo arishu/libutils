@@ -7,7 +7,7 @@ cd %~dp0
 
 cd "..\x64\Debug"
 
-set LOCATION="company"
+set LOCATION="home"
 
 if %LOCATION% == "home" (
 	set DST="C:\Program Files\Lua\5.2\"
@@ -31,7 +31,5 @@ if %LOCATION% == "home" (
 	xcopy NLog.dll %DST% /Y /S
 	xcopy NLog.config %DST% /Y /S
 )
-
-
 
 pause
