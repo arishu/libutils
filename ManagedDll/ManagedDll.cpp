@@ -4,6 +4,9 @@
 #include "ManagedDll.h"
 
 using namespace System;
+using namespace System::IO;
+using namespace System::Threading;
+using namespace System::Reflection;
 using namespace libutilscore::FTP;
 using namespace libutilscore::IO;
 
@@ -47,7 +50,8 @@ private:
 public:
 	static std::string ShowHello()
 	{
-		String ^ message = SharpFTP::ShowHello();
+		SharpFTP sharpFtp;
+		String ^ message = sharpFtp.ShowHello();
 		std::string result;
 		MarshallString(message, result);
 		return result;
@@ -56,23 +60,25 @@ public:
 	static ExecResult SetFtpInfo(std::string host, std::string user,
 		std::string passwd, std::string remotePath)
 	{
-		return getResult(SharpFTP
-			::SetFtpInfo(ToSystemString(host), ToSystemString(user),
+		SharpFTP sharpFtp;
+		return getResult(sharpFtp.SetFtpInfo(ToSystemString(host), ToSystemString(user),
 				ToSystemString(passwd), ToSystemString(remotePath)));
 	}
 
 	static ExecResult UploadToRemote(std::string localPath, std::string remotePath, bool createIfNotExist)
 	{
+		SharpFTP sharpFtp;
 		if (remotePath == "")
-			return getResult(SharpFTP::UploadToRemote(ToSystemString(localPath), nullptr, createIfNotExist));
+			return getResult(sharpFtp.UploadToRemote(ToSystemString(localPath), nullptr, createIfNotExist));
 		else
-			return getResult(SharpFTP::
+			return getResult(sharpFtp.
 				UploadToRemote(ToSystemString(localPath), ToSystemString(remotePath), createIfNotExist));
 	}
 
 	static ExecResult DownloadFromRemote(std::string remotePath, std::string localPath)
 	{
-		return getResult(SharpFTP::DownloadFromRemote(ToSystemString(remotePath), ToSystemString(localPath)));
+		SharpFTP sharpFtp;
+		return getResult(sharpFtp.DownloadFromRemote(ToSystemString(remotePath), ToSystemString(localPath)));
 	}
 };
 
@@ -84,12 +90,14 @@ private:
 public:
 	static bool IsFileExist(std::string filePath)
 	{
-		return LocalFileSystem::IsFileExist(ToSystemString(filePath));
+		LocalFileSystem lfs;
+		return lfs.IsFileExist(ToSystemString(filePath));
 	}
 
 	static bool IsDirectoryExist(std::string dirPath)
 	{
-		return LocalFileSystem::IsDirectoryExist(ToSystemString(dirPath));
+		LocalFileSystem lfs;
+		return lfs.IsDirectoryExist(ToSystemString(dirPath));
 	}
 };
 

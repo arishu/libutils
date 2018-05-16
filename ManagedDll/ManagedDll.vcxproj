@@ -159,6 +159,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="ManagedDll.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -168,12 +169,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="CopyDllToLuaHome.bat" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\libutilscore\libutilscore.csproj">
       <Project>{72dd46dd-16f4-4e3f-9b40-d652bf0486ef}</Project>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="CopyDllToLuaHome.bat" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
