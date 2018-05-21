@@ -1,16 +1,34 @@
 package.cpath = "D:/workspace/github/libutils/x64/Debug/?.dll"
 
-local libutils = require("libutils")
+require("libutils")
 
 --local hello = libutils.showHello()
 --print(hello)
 
 -- WVVoa2FrMVVTWHBPUkZVeQ==		(hwc123456)
-local ret, errMsg = libutils.setFtpInfo("127.0.0.1", "hwc", "WVVoa2FrMVVTWHBPUkZVeQ==")
-print("Set FTP Info", ret, errMsg)
+local ftpInfo = {
+	host="127.0.0.1", 
+	user="hwc", 
+	passwd="WVVoa2FrMVVTWHBPUkZVeQ=="
+}
 
-ret, errMsg = libutils.uploadToRemote("D:\\demo.rar", "/promptboard/sed", false)
-print("Upload File", ret, errMsg)
+local ret, errMsg, operationIdOrError
 
-ret, errMsg = libutils.downloadFromRemote("/background.webp", "D:\\ABCD.webp")
-print("Download File", ret, errMsg)
+--local ret, errMsg = libutils.setFtpInfo(ftpInfo)
+--print("Set FTP Info", ret, errMsg)
+
+---[[
+ret, operationIdOrError = libutils.uploadToRemote("D:\\FineReport_8.0.zip", "/promptboard/", true)
+print("Upload File: ", ret, operationIdOrError)
+--]]
+
+
+--[[
+ret, operationIdOrError = libutils.downloadFromRemote("/background.webp", "D:\\ABCD.webp")
+print("Download File: ", ret, operationIdOrError)
+--]]
+
+if (ret) then
+	ret, errMsg = libutils.getExecuteResult(operationIdOrError)
+	print(ret, errMsg)
+end

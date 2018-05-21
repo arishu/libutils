@@ -16,7 +16,7 @@ namespace libutilscore.IO
         public static bool IsFileExist(string filePath)
         {
             bool exist = File.Exists(filePath);
-            Log.logger.Info("Checking File {0} Exist? {1}", filePath, exist);
+            Log.Logger.Info("Checking File {0} Exist? {1}", filePath, exist);
             return exist;
         }
 
@@ -28,7 +28,7 @@ namespace libutilscore.IO
         public static bool IsDirectoryExist(string dirPath)
         {
             bool exist = Directory.Exists(dirPath);
-            Log.logger.Info("Checking Directory {0} Exist? {1}", dirPath, exist);
+            Log.Logger.Info("Checking Directory {0} Exist? {1}", dirPath, exist);
             return exist;
         }
 

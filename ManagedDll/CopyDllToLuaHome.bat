@@ -21,6 +21,7 @@ if %LOCATION% == "home" (
 	xcopy libutilscore.dll %DST% /Y /S
 	xcopy NLog.dll %DST% /Y /S
 	xcopy NLog.config %DST% /Y /S
+	REM xcopy CoreFTP.exe %DST% /Y /S
 ) else (
 	@echo on
 	xcopy libutils.dll %DST% /Y /S

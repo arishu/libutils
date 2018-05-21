@@ -1,16 +1,31 @@
 ﻿
+#region Using directives
 using System;
 using System.ComponentModel;
-using System.Reflection;
+using System.Collections;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-
+#endregion
 
 namespace libutilscore.Common
 {
-    public class Results
+    internal static class Results
     {
-        public enum RTYPE
+        #region Private Properties
+
+        /// <summary>
+        /// Lock Object
+        /// </summary>
+        private static Object LockObject = new object();
+
+        /// <summary>
+        /// Hashtable holding execution result
+        /// </summary>
+        private static Hashtable execResults = new Hashtable();
+
+        #endregion
+
+        internal enum RTYPE
         {
             [Description("")]
             SUCCESS = 0x6000,   // execute successfully
@@ -49,18 +64,35 @@ namespace libutilscore.Common
             E_IOEXCEPTION           // 包括不正确或无效的文件名、目录名或卷标的语法
         }
 
-        public static string GetEnumDescription(Enum value)
+
+        #region Public Methods
+
+        public static Tuple<bool, string> GetExecResult(object operationId)
         {
-            FieldInfo fi = value.GetType().GetField(value.ToString());
+            Tuple<bool, string> result = Tuple.Create(false, "No Result");
+            lock (LockObject)
+            {
+                if (execResults.Count > 0)
+                {
+                    foreach (DictionaryEntry entry in execResults)
+                    {
+                        if (entry.Key == operationId)
+                        {
+                            Tuple<bool, string> ret = (Tuple<bool, string>)entry.Value;
+                            result = Tuple.Create(ret.Item1, ret.Item2);
+                        }
+                    }
+                }
+            }
+            return result;
+        }
 
-            DescriptionAttribute[] attributes = 
-                (DescriptionAttribute[])fi.GetCustomAttributes(
-                    typeof(DescriptionAttribute),false);
-
-            if (attributes != null && attributes.Length > 0)
-                return attributes[0].Description;
-            else
-                return value.ToString();
+        public static void AddExecResult(object operationId, Tuple<bool, string> result)
+        {
+            lock (LockObject)
+            {
+                execResults.Add(operationId, result);
+            }
         }
 
         /* get results */
@@ -83,29 +115,31 @@ namespace libutilscore.Common
             return Tuple.Create(false, e.ToString());
         }
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
+        //[MethodImpl(MethodImplOptions.NoInlining)]
         public static Tuple<bool, string> GetResultsTuple(bool issuccess, RTYPE rtype) 
         {
             //string fileName = new StackFrame(1, true).GetMethod().Name;
-            string msg = GetEnumDescription(rtype);
+            string msg = EnumHelper.GetEnumDescription(rtype);
             return Tuple.Create(issuccess, msg);
         }
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
+        //[MethodImpl(MethodImplOptions.NoInlining)]
         public static string GetResultString(bool issuccess)
         {
             return GetResultString(true, RTYPE.SUCCESS);
         }
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
+        //[MethodImpl(MethodImplOptions.NoInlining)]
         public static string GetResultString(bool issuccess, RTYPE rtype)
         {
             string fileName = new StackFrame(1, true).GetMethod().Name;
-            string msg = GetEnumDescription(rtype);
+            string msg = EnumHelper.GetEnumDescription(rtype);
             if (issuccess)
                 return "true";
             else
                 return "failed: " + msg + ", in file: " + fileName;
         }
+
+        #endregion
     }
 }

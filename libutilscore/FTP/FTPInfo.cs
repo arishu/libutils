@@ -1,11 +1,23 @@
 ﻿
+#region Using directives
 using System.ComponentModel;
 using libutilscore.Common;
+#endregion
 
 namespace libutilscore.FTP
 {
-    class FTPInfo
+    public class FTPInfo
     {
+        #region Constructors
+
+        public FTPInfo()
+        {
+            Host = "127.0.0.1";
+            User = "anonymous";
+            Passwd = "V1ZjMWRtSnViSFJpTTFaNlVVUkZlVTU1TkhkTWFrRjFUVkU5UFE9PQ =="; // anonymous@127.0.0.1
+            RemotePath = "/";
+        }
+
         public FTPInfo(string host, string user, string passwd)
         {
             Host = host;
@@ -22,6 +34,8 @@ namespace libutilscore.FTP
             RemotePath = remotePath;
         }
 
+        #endregion
+
         private string passwd;
 
         [DefaultValue("127.0.0.1")]
@@ -30,7 +44,8 @@ namespace libutilscore.FTP
         [DefaultValue("anonymous")]
         public string User { get; set; }
 
-        [DefaultValue("anonymous@127.0.0.1")]
+        // anonymous@127.0.0.1
+        [DefaultValue("V1ZjMWRtSnViSFJpTTFaNlVVUkZlVTU1TkhkTWFrRjFUVkU5UFE9PQ ==")]
         public string Passwd
         {
             get { return passwd;  }
