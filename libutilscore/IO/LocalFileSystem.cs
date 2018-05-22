@@ -1,7 +1,9 @@
 ﻿
+#region Using directives
 using System;
 using System.IO;
 using libutilscore.Logging;
+#endregion
 
 namespace libutilscore.IO
 {
@@ -12,10 +14,10 @@ namespace libutilscore.IO
         /// </summary>
         /// <param name="filePath">Absolute File Path</param>
         /// <returns></returns>
-        public bool IsFileExist(string filePath)
+        public static bool IsFileExist(string filePath)
         {
             bool exist = File.Exists(filePath);
-            Log.logger.Info("Checking File {0} Exist? {1}", filePath, exist);
+            Log.Logger.Info("Checking File {0} Exist? {1}", filePath, exist);
             return exist;
         }
 
@@ -24,10 +26,10 @@ namespace libutilscore.IO
         /// </summary>
         /// <param name="dirPath">Absolute Directory Path</param>
         /// <returns></returns>
-        public bool IsDirectoryExist(string dirPath)
+        public static bool IsDirectoryExist(string dirPath)
         {
             bool exist = Directory.Exists(dirPath);
-            Log.logger.Info("Checking Directory {0} Exist? {1}", dirPath, exist);
+            Log.Logger.Info("Checking Directory {0} Exist? {1}", dirPath, exist);
             return exist;
         }
 

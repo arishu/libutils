@@ -27,7 +27,11 @@ if %LOCATION% == "home" (
 	xcopy libutils.pdb %DST% /Y /S
 
 	xcopy ManagedDll.dll %DST% /Y /S
+	xcopy ManagedDll.pdb %DST% /Y /S
+
 	xcopy libutilscore.dll %DST% /Y /S
+	xcopy libutilscore.pdb %DST% /Y /S
+
 	xcopy NLog.dll %DST% /Y /S
 	xcopy NLog.config %DST% /Y /S
 )

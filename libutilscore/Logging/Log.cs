@@ -3,13 +3,13 @@ using NLog;
 
 namespace libutilscore.Logging
 {
-    internal class Log
+    public class Log
     {
-        public static Logger logger { get; private set; }
+        public static Logger Logger { get; private set; }
         static Log()
         {
             LogManager.ReconfigExistingLoggers();
-            logger = LogManager.GetCurrentClassLogger();
+            Logger = LogManager.GetCurrentClassLogger();
         }
     }
 }

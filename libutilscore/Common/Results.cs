@@ -3,13 +3,47 @@ using System;
 using System.ComponentModel;
 using System.Reflection;
 using System.Diagnostics;
+using System.Collections;
 using System.Runtime.CompilerServices;
 
 
 namespace libutilscore.Common
 {
-    public class Results
+    public static class Results
     {
+        public static Hashtable execResults = new Hashtable();
+        private static Object LockObject = "Results Class";
+
+        public static Tuple<bool, string> GetExecResultByKey(object operationId)
+        {
+            Tuple<bool, string> result = Tuple.Create(false, "No Result");
+            lock (LockObject)
+            {
+                if (execResults.ContainsKey(operationId))
+                {
+                    foreach (DictionaryEntry entry in execResults)
+                    {
+                        if (entry.Key == operationId)
+                        {
+                            Tuple<bool, string> v = (Tuple<bool, string>)entry.Value;
+                            result = Tuple.Create(v.Item1, v.Item2);
+                            execResults.Remove(operationId);
+                            break;
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+
+        public static void AddExecResult(object operationId, Tuple<bool, string> newResult)
+        {
+            lock (LockObject)
+            {
+                execResults.Add(operationId, newResult);
+            }
+        }
+
         public enum RTYPE
         {
             [Description("")]
