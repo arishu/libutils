@@ -94,7 +94,7 @@ namespace FTPWorker
             string operationId = (string)args.GetValue(0);
             string localFilePath = (string)args.GetValue(1);
             string remotePath = (string)args.GetValue(2);
-            bool createRemotePath = (bool)args.GetValue(2);
+            bool createRemotePath = (bool)args.GetValue(3);
 
             FTPClient client = new FTPClient(ftpInfo)
             {
