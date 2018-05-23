@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Collections;
 using System.Threading;
+using System.Threading.Tasks;
 using libutilscore.Logging;
 #endregion
 
@@ -26,11 +27,6 @@ namespace CoreFTPHelper
         private static Stack stack = new Stack();
 
         private static ManualResetEvent allDone = new ManualResetEvent(false);
-
-        /// <summary>
-        /// Look up timeout in milliseconds
-        /// </summary>
-        private static int LookupTimeout = 5000;
 
         //private static CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         #endregion
@@ -168,7 +164,7 @@ namespace CoreFTPHelper
             {
                 try
                 {
-                    Thread.Sleep(1000);
+                    Thread.Sleep(100);
                     lock (TaskLockObj)
                     {
                         if (stack.Count > 0)
@@ -260,6 +256,53 @@ namespace CoreFTPHelper
             }
         }
 
+        public void _StartSocket()
+        {
+            byte[] bytes = new byte[1024];
+
+            //IPHostEntry ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());
+            //IPAddress ipAddress = ipHostInfo.AddressList[0];
+            IPEndPoint ipEndPoint = new IPEndPoint(_address, _port);
+
+            try
+            {
+                Socket listener = new Socket(AddressFamily.InterNetwork, 
+                    SocketType.Stream, ProtocolType.Tcp);
+
+                listener.Bind(ipEndPoint);
+                listener.Listen(100);
+
+                // start a thread to listen to the stack
+                Thread taskHandlerThread = new Thread(new ThreadStart(_ExecuteTask));
+                taskHandlerThread.Start();
+
+                while (true)
+                {
+                    // Set the event to nonsignaled state
+                    allDone.Reset();
+
+                    Log.Logger.Info("Waiting for a connection ...");
+
+                    // Start an asynchronous socket to listen for connections
+                    listener.BeginAccept(
+                        new AsyncCallback(AcceptCallback), 
+                        listener);
+
+                    // Wait until a connection is made before continuing
+                    allDone.WaitOne();
+                }
+            }
+            catch (SocketException ex)
+            {
+                Log.Logger.Error("Socket error: {0}", ex.ToString());
+            }
+            catch (Exception ex)
+            {
+                Log.Logger.Error("Server Error: {0}", ex.ToString());
+            }
+
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -282,7 +325,7 @@ namespace CoreFTPHelper
 
                 // Read command from the client socket
                 int bytesRead = handler.Receive(state.buffer);
-
+                
                 if (bytesRead > 0)
                 {
                     // There might be more data, so store the data received so far.  
@@ -359,53 +402,6 @@ namespace CoreFTPHelper
             }
         }
 
-
-        public void _StartSocket()
-        {
-            byte[] bytes = new byte[1024];
-
-            //IPHostEntry ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());
-            //IPAddress ipAddress = ipHostInfo.AddressList[0];
-            IPEndPoint ipEndPoint = new IPEndPoint(_address, _port);
-
-            try
-            {
-                Socket listener = new Socket(AddressFamily.InterNetwork, 
-                    SocketType.Stream, ProtocolType.Tcp);
-
-                listener.Bind(ipEndPoint);
-                listener.Listen(100);
-
-                // start a thread to listen to the stack
-                Thread executeThread = new Thread(() => _ExecuteTask());
-                executeThread.Start();
-
-                while (true)
-                {
-                    // Set the event to nonsignaled state
-                    allDone.Reset();
-
-                    Log.Logger.Info("Waiting for a connection ...");
-
-                    // Start an asynchronous socket to listen for connections
-                    listener.BeginAccept(
-                        new AsyncCallback(AcceptCallback), 
-                        listener);
-
-                    // Wait until a connection is made before continuing
-                    allDone.WaitOne();
-                }
-            }
-            catch (SocketException ex)
-            {
-                Log.Logger.Error("Socket error: {0}", ex.ToString());
-            }
-            catch (Exception ex)
-            {
-                Log.Logger.Error("Server Error: {0}", ex.ToString());
-            }
-
-        }
 
         /// <summary>
         /// Start Tcp Server

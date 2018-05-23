@@ -18,17 +18,13 @@ local ret, errMsg, operationIdOrError
 --print("Set FTP Info", ret, errMsg)
 
 ---[[
-ret, operationIdOrError = libutils.uploadToRemote("D:\\FineReport_8.0.zip", "/promptboard/", true)
+--ret, operationIdOrError = libutils.uploadToRemote("D:\\Ice-3.6.3.msi", "/promptboard/", true)
+ret, operationIdOrError = libutils.uploadToRemote("D:\\Trip.jpg", "/promptboard/", true)
 print("Upload File: ", ret, operationIdOrError)
 --]]
 
 
 --[[
-ret, operationIdOrError = libutils.downloadFromRemote("/background.webp", "D:\\ABCD.webp")
+ret, operationIdOrError = libutils.downloadFromRemote("/promptboard/Ice-3.6.3.msi", "D:\\Ice-3.6.3-bak.msi")
 print("Download File: ", ret, operationIdOrError)
 --]]
-
-if (ret) then
-	ret, errMsg = libutils.getExecuteResult(operationIdOrError)
-	print(ret, errMsg)
-end

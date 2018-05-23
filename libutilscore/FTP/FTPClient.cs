@@ -6,6 +6,8 @@ using System.Collections;
 using System.ComponentModel;
 using libutilscore.Logging;
 using libutilscore.Common;
+using System.Threading;
+using System.Text;
 #endregion
 
 namespace libutilscore.FTP
@@ -13,6 +15,45 @@ namespace libutilscore.FTP
     public class FTPClient
     {
         #region Public Properties
+
+        public class FtpState
+        {
+            public FtpWebRequest Request;
+
+            public string FileName { get; set; }
+
+            public string localFilePath;
+
+            public Stream WorkStream;
+
+            private static int BufferSize = 4 * 1024;
+
+            public int BUFFER_SIZE
+            {
+                get
+                {
+                    return BufferSize;
+                }
+                set
+                {
+                    BufferSize = value;
+                }
+            }
+
+            public void ResizeBufferSize(int newBufferSize)
+            {
+                BUFFER_SIZE = newBufferSize;
+                buffer = new byte[BufferSize];
+            }
+
+            public byte[] buffer = new byte[BufferSize];
+
+            public StringBuilder sb = new StringBuilder();
+
+            public long TotalSize = 0;
+        }
+
+        public FtpState state = new FtpState();
 
         /// <summary>
         /// FTP Operations
@@ -34,6 +75,10 @@ namespace libutilscore.FTP
         /// Operation args
         /// </summary>
         public ArrayList OperationArgs { get; set; }
+
+        public ManualResetEvent DownLoadDone = new ManualResetEvent(false);
+
+        public ManualResetEvent UploadDone = new ManualResetEvent(false);
 
         #endregion
 
@@ -66,7 +111,7 @@ namespace libutilscore.FTP
         /// </summary>
         private Exception exception;
 
-        private Exception LastErrorException
+        public Exception LastErrorException
         {
             get { return exception; }
             set
@@ -90,7 +135,7 @@ namespace libutilscore.FTP
 
         #region Private Methods
 
-        private FtpWebRequest GetFtpRequest(string strUri)
+        public FtpWebRequest GetFtpRequest(string strUri)
         {
             FtpWebRequest request = (FtpWebRequest)WebRequest.Create(strUri);
             // Set Connect Timeout
@@ -102,7 +147,7 @@ namespace libutilscore.FTP
             return request;
         }
 
-        private string GetStrUri(string strPath)
+        public string GetStrUri(string strPath)
         {
             string absolutePath = ("/" + strPath);
             absolutePath = absolutePath.Replace("//", "/");
@@ -115,7 +160,7 @@ namespace libutilscore.FTP
             return filePath.Replace("\\\\", "\\");
         }
 
-        private string GetRemoteDirPath(string remotePath)
+        public string GetRemoteDirPath(string remotePath)
         {
             if (remotePath.EndsWith("/"))
             {
@@ -129,6 +174,32 @@ namespace libutilscore.FTP
         {
             Log.Logger.Info("Remote FileName: {0}", Path.GetFileName(Base + remotePath));
             return Path.GetFileName(Base + remotePath);
+        }
+
+        public bool GetRemoteFileSize(string remoteFilePath)
+        {
+            string remoteFileName = GetRemoteFileName(remoteFilePath);
+            try
+            {
+                Log.Logger.Info("Starting Get Remote File '{0}' Size", remoteFileName);
+
+                FtpWebRequest request = GetFtpRequest(GetStrUri(remoteFilePath));
+                request.Method = WebRequestMethods.Ftp.GetFileSize;
+                request.UseBinary = true;
+
+                response = (FtpWebResponse)request.GetResponse();
+
+                state.TotalSize = response.ContentLength;
+
+                Log.Logger.Info("Remote File {0} size is {1}", remoteFileName, state.TotalSize);
+
+                return true;
+            } catch(Exception ex)
+            {
+                Log.Logger.Error("Get Remote File Size Error: {0}", ex.StackTrace);
+                LastErrorException = ex;
+                return false;
+            }
         }
 
         /* Make Remote Directory */
@@ -161,7 +232,7 @@ namespace libutilscore.FTP
         /// <param name="remotePath">Absolute Remote Directory Path</param>
         /// <param name="createIfNotExist">Whether or not create the directory when remote directory not exists</param>
         /// <returns></returns>
-        private bool ChangeRemoteDir(string remotePath, bool createIfNotExist)
+        public bool ChangeRemoteDir(string remotePath, bool createIfNotExist)
         {
             if (remotePath == null)
                 remotePath = "/";
@@ -227,6 +298,7 @@ namespace libutilscore.FTP
 
         #endregion
 
+        
         #region Public Methods
 
         /// <summary>
@@ -266,28 +338,36 @@ namespace libutilscore.FTP
                 // Set local client to passive
                 request.UsePassive = true;
 
-
-                //byte[] fileContents;
-                //StreamReader sourceStream = new StreamReader(localFilePath);
-                //fileContents = Encoding.Default.GetBytes(sourceStream.ReadToEnd());
-
-                // get the file size and set remote Content Length
-                FileStream instream = File.OpenRead(localFilePath);
-                byte[] fileContents = new byte[instream.Length];
-                instream.Read(fileContents, 0, fileContents.Length);
-                instream.Close();
-                request.ContentLength = fileContents.Length;
-
                 Log.Logger.Info("Writing to remote ...");
-                // Get Out Stream and Write content to the ftp stream
-                Stream requestStream = request.GetRequestStream();
-                requestStream.Write(fileContents, 0, fileContents.Length);
-                requestStream.Close();
+
+                UploadDone.Reset();
+
+                FtpState state = new FtpState
+                {
+                    Request = request,
+                    localFilePath = localFilePath
+                };
+
+                request.BeginGetRequestStream(GetRequestStreamCallback, state);
+
+                UploadDone.WaitOne();
+
+                //// get the file size and set remote Content Length
+                //FileStream instream = File.OpenRead(localFilePath);
+                //byte[] fileContents = new byte[instream.Length];
+                //instream.Read(fileContents, 0, fileContents.Length);
+                //instream.Close();
+                //request.ContentLength = fileContents.Length;
+
+                //// Get Out Stream and Write content to the ftp stream
+                //Stream requestStream = request.GetRequestStream();
+                //requestStream.Write(fileContents, 0, fileContents.Length);
+                //requestStream.Close();
+
                 Log.Logger.Info("Writing Done!");
 
-                Log.Logger.Info("Getting response ...");
-
-                response = (FtpWebResponse)request.GetResponse();
+                //Log.Logger.Info("Getting response ...");
+                //response = (FtpWebResponse)request.GetResponse();
                 Log.Logger.Info("Successfully Upload file {0} to remote {1} ", Path.GetFileName(localFilePath), response.ResponseUri);
                 return true;
             }
@@ -298,6 +378,58 @@ namespace libutilscore.FTP
                 LastErrorException = ex;
                 Disconnect();
                 return false;
+            }
+        }
+
+        private void GetRequestStreamCallback(IAsyncResult ar)
+        {
+            FtpState state = (FtpState)ar.AsyncState;
+            FtpWebRequest request = state.Request;
+            string localFilePath = state.localFilePath;
+            try
+            {
+                using (Stream requestStream = request.EndGetRequestStream(ar))
+                using (FileStream fileStream = File.OpenRead(localFilePath))
+                {
+                    request.ContentLength = fileStream.Length;
+
+                    state.WorkStream = requestStream;
+
+                    long count = 0;
+                    int bytesRead = 0;
+                    do
+                    {
+                        bytesRead = fileStream.Read(state.buffer, 0, state.BUFFER_SIZE);
+                        requestStream.BeginWrite(state.buffer, 0, bytesRead, SendCallback, state);
+                        count += bytesRead;
+                    } while (bytesRead != 0);
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Logger.Error("Error in GetRequestStreamCallback: {0}", ex.StackTrace);
+                LastErrorException = ex;
+            }
+            finally
+            {
+                UploadDone.Set();
+            }
+
+        }
+
+        private void SendCallback(IAsyncResult ar)
+        {
+            try
+            {
+                FtpState state = (FtpState)ar.AsyncState;
+                Stream requestStream = state.WorkStream;
+                requestStream.EndWrite(ar);
+            }
+            catch (Exception ex)
+            {
+                Log.Logger.Error("Calling SendCallback failed: {0}", ex.StackTrace);
+                LastErrorException = ex;
             }
         }
 
@@ -312,6 +444,8 @@ namespace libutilscore.FTP
             string remoteFileName = GetRemoteFileName(remoteFilePath);
             try
             {
+                DownLoadDone.Reset();
+
                 Log.Logger.Info("Starting download remote file: {0}", remoteFileName);
                 
                 FtpWebRequest request = GetFtpRequest(GetStrUri(remoteFilePath));
@@ -326,19 +460,30 @@ namespace libutilscore.FTP
                 }
 
                 Log.Logger.Info("Writing to local file: {0}", localFilePath);
-                byte[] buffer = new byte[2048];
-                int byteRead = 0;
-                using (Stream reader = response.GetResponseStream())
-                using (Stream fstream = new FileStream(localFilePath, FileMode.Create))
+
+                FtpState state = new FtpState()
                 {
-                    while (true)
-                    {
-                        byteRead = reader.Read(buffer, 0, buffer.Length);
-                        if (byteRead == 0)
-                            break;
-                        fstream.Write(buffer, 0, byteRead);
-                    }
-                }
+                    Request = request,
+                    localFilePath = localFilePath
+                };
+
+                request.BeginGetResponse(new AsyncCallback(GetResponseCallback), state);
+
+                DownLoadDone.WaitOne();
+
+                //byte[] buffer = new byte[10 * 1024];
+                //int byteRead = 0;
+                //using (Stream reader = response.GetResponseStream())
+                //using (Stream fstream = new FileStream(localFilePath, FileMode.Create))
+                //{
+                //    while (true)
+                //    {
+                //        byteRead = reader.Read(buffer, 0, buffer.Length);
+                //        if (byteRead == 0)
+                //            break;
+                //        fstream.Write(buffer, 0, byteRead);
+                //    }
+                //}
                 Log.Logger.Info("Done!");
                 Log.Logger.Info("Successfully Download file {0} from server!", remoteFileName);
                 return true;
@@ -350,6 +495,29 @@ namespace libutilscore.FTP
                 LastErrorException = ex;
                 Disconnect();
                 return false;
+            }
+        }
+
+        private void GetResponseCallback(IAsyncResult ar)
+        {
+            FtpState state = (FtpState)ar.AsyncState;
+            FtpWebRequest request = state.Request;
+            try
+            {
+                using (FtpWebResponse response = request.EndGetResponse(ar) as FtpWebResponse)
+                using (Stream respStream = response.GetResponseStream())
+                using(FileStream fstream = new FileStream(state.localFilePath, FileMode.Create))
+                {
+                    respStream.CopyTo(fstream);
+                }
+            }
+            catch(Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                DownLoadDone.Set();
             }
         }
 
