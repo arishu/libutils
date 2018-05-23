@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using libutilscore.FTP;
 using libutilscore.Logging;
+using libutilscore.Core;
 #endregion
 
 namespace CoreFTPHelper
@@ -46,12 +47,15 @@ namespace CoreFTPHelper
                             }
                         case "get":
                             {
-                                Tuple<bool, string> result = SharpFTP.DownloadFromRemote(operationId,
-                                    (string)args.GetValue(1), (string)args.GetValue(2));
-                                lock (TcpServer.ResultLockObj)
-                                {
-                                    TcpServer.ResultsTable.Add(operationId, result);
-                                }
+                                //Tuple<bool, string> result = SharpFTP.DownloadFromRemote(operationId,
+                                //    (string)args.GetValue(1), (string)args.GetValue(2));
+
+                                
+
+                                //lock (TcpServer.ResultLockObj)
+                                //{
+                                //    TcpServer.ResultsTable.Add(operationId, result);
+                                //}
                                 break;
                             }
                         default:
@@ -72,7 +76,7 @@ namespace CoreFTPHelper
                 throw ex;
             } finally
             {
-                TcpServer.executeDone.Set();
+                //TcpServer.executeDone.Set();
             }
         }
     }

@@ -59,7 +59,6 @@ namespace libutilscore.Core
                 }
 
                 newProcess.Start();
-
                 Log.Logger.Info("Started a new Process");
 
                 success = true;

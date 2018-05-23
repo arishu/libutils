@@ -11,7 +11,7 @@ using System.Threading;
 using libutilscore.Logging;
 #endregion
 
-namespace CoreFTPHelper
+namespace FTPWorker
 {
     class TcpServer
     {
@@ -43,7 +43,7 @@ namespace CoreFTPHelper
         public static Hashtable ResultsTable = new Hashtable();
 
         //public static ManualResetEvent executeDone = new ManualResetEvent(false);
-        
+
         #endregion
 
         #region Construtors
@@ -101,7 +101,7 @@ namespace CoreFTPHelper
                         throw new ArgumentException("couldn't config FTP: need more inforation");
                     }
                     //    host          user         passwd      remotePath
-                    Program.ftpInfo = new ArrayList { paramArgs[2], paramArgs[3],
+                    Main.ftpInfo = new ArrayList { paramArgs[2], paramArgs[3],
                         paramArgs[4], paramArgs[5] ??"/" };
                 }
                 else if (operation == "resp")
@@ -171,14 +171,18 @@ namespace CoreFTPHelper
             {
                 try
                 {
-                    Thread.Sleep(1000);
+                    Thread.Sleep(100);
                     lock (TaskLockObj)
                     {
                         if (stack.Count > 0)
                         {
                             Log.Logger.Info("Starting executing a task");
                             FTPTask task = (FTPTask)stack.Pop();
-                            task.Exec();
+                            //task.Exec();
+
+                            TaskForm taskForm = new TaskForm(task);
+                            taskForm.Show();
+
                             Log.Logger.Info("Successfully execute a task.");
                         }
                     }
@@ -223,10 +227,10 @@ namespace CoreFTPHelper
                 Log.Logger.Info("Server started(host: {0}, port: {1})", _address.ToString(), _port);
 
                 // start a thread to listen to the stack
-                Thread executeThread = new Thread(new ThreadStart(_ExecuteTask));
-                executeThread.Start();
+                //Thread executeThread = new Thread(new ThreadStart(_ExecuteTask));
+                //executeThread.Start();
 
-                while (true)
+                while (!Main.cancellationTokenSource.IsCancellationRequested)
                 {
                     Log.Logger.Info("Waiting connection ...");
 
@@ -285,18 +289,12 @@ namespace CoreFTPHelper
                                 throw new ArgumentException("couldn't config FTP: need more inforation");
                             }
                             //    host          user         passwd      remotePath
-                            Program.ftpInfo = new ArrayList { paramArgs[2], paramArgs[3],
+                            Main.ftpInfo = new ArrayList { paramArgs[2], paramArgs[3],
                             paramArgs[4], paramArgs[5] ??"/" };
                             break;
                         }
                     case "resp":
                         {
-                            //// Set the event to nonsignaled state.
-                            //executeDone.Reset();
-
-                            //// Wait until a connection is made before continuing.
-                            //executeDone.WaitOne();
-
                             string operationId = paramArgs[1];
                             Tuple<bool, string> result = Tuple.Create(false, "没有获取到执行结果");
                             lock (ResultLockObj)
@@ -335,17 +333,18 @@ namespace CoreFTPHelper
                             {
                                 task.OperaionArgs.Add(paramArgs[i]);
                             }
-                            lock (TaskLockObj)
-                            {
-                                stack.Push(task);
-                            }
+                            //lock (TaskLockObj)
+                            //{
+                            //    stack.Push(task);
+                            //}
+                            Main.StartFTPTaskWindow(task);
                             break;
                         }
                 }
             }
             catch (Exception ex)
             {
-                throw ex;
+                Log.Logger.Error(ex.StackTrace);
             }
         }
 

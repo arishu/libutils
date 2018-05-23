@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace libutilscore.Common
 {
-    class EnumHelper
+    public class EnumHelper
     {
         public static string GetEnumDescription(Enum value)
         {

@@ -13,6 +13,17 @@ namespace libutilscore.FTP
     {
         private static FTPInfo ftpInfo = null;
 
+        //internal class StateObject
+        //{
+        //    public Socket workSocket;
+
+        //    public const int BufferSize = 1024;
+
+        //    public byte[] buffer = new byte[BufferSize];
+
+        //    public StringBuilder sb = new StringBuilder();
+        //}
+
         public static string ShowHello()
         {
             return "Hello From C Sharp.";
@@ -54,6 +65,7 @@ namespace libutilscore.FTP
 
                 buffer = new byte[1024];
                 int byteRecv = socket.Receive(buffer);
+
                 responseStr = Encoding.UTF8.GetString(buffer);
 
                 socket.Shutdown(SocketShutdown.Both);
@@ -72,6 +84,18 @@ namespace libutilscore.FTP
             }
             return ret;
         }
+
+        //private void ReceiveCallback(IAsyncResult ar)
+        //{
+        //    try
+        //    {
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+
+        //    }
+        //}
 
         /// <summary>
         /// FTP Server Configuration
