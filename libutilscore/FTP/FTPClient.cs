@@ -28,6 +28,11 @@ namespace libutilscore.FTP
             public string LocalFilePath;
 
             /// <summary>
+            /// Local or Remote file's Name
+            /// </summary>
+            public string FileName { get; set; }
+
+            /// <summary>
             /// The Buffer size,default is 4KB
             /// </summary>
             private static int BufferSize = 4 * 1024;
@@ -202,7 +207,12 @@ namespace libutilscore.FTP
             return remotePath.Substring(0, remotePath.LastIndexOf("/"));
         }
 
-        private string GetRemoteFileName(string remotePath)
+        /// <summary>
+        /// Get Remote File's Name
+        /// </summary>
+        /// <param name="remotePath"></param>
+        /// <returns></returns>
+        public string GetRemoteFileName(string remotePath)
         {
             Log.Logger.Info("Remote FileName: {0}", Path.GetFileName(Base + remotePath));
             return Path.GetFileName(Base + remotePath);
@@ -407,7 +417,7 @@ namespace libutilscore.FTP
                     state.TotalSize = instream.Length;
                     do
                     {
-                        sentBytes = instream.Read(state.buffer, 0, FtpState.BufferSize);
+                        sentBytes = instream.Read(state.buffer, 0, state.BUFFER_SIZE);
 
                         state.TransferedBytes += sentBytes; // set transfered bytes
 
@@ -617,7 +627,7 @@ namespace libutilscore.FTP
                     int bytesRecv = 0;
                     while (true)
                     {
-                        bytesRecv = respStream.Read(state.buffer, 0, FtpState.BufferSize);
+                        bytesRecv = respStream.Read(state.buffer, 0, state.BUFFER_SIZE);
 
                         if (bytesRecv == 0)
                             break;

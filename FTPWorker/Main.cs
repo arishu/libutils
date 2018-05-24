@@ -62,7 +62,7 @@ namespace FTPWorker
         public static void StartFTPTaskWindow(FTPTask task)
         {
             TaskForm taskForm = new TaskForm(task);
-            taskForm.ShowDialog();
+            taskForm.Show();
             taskForm.Activate();
         }
 
