@@ -19,7 +19,7 @@ namespace FTPWorker
     public partial class TaskForm : Form
     {
         private static ArrayList ValidOperations = new ArrayList { "get", "put" };
-        private static string localFilePath = null;
+        private string filePath = null;
 
         public TaskForm(FTPTask task)
         {
@@ -29,13 +29,13 @@ namespace FTPWorker
             if (operation == "get")
             {
                 string localFilePath = (string)task.OperaionArgs.ToArray().GetValue(2);
-                label1.Text = "正在下载：" + Path.GetFileName(localFilePath);
+                label1.Text = "下载：" + Path.GetFileName(localFilePath);
                 ViewBtn.Visible = true;
             }
             else if (operation == "put")
             {
                 string localFilePath = (string)task.OperaionArgs.ToArray().GetValue(1);
-                label1.Text = "正在上传：" + Path.GetFileName(localFilePath);
+                label1.Text = "上传：" + Path.GetFileName(localFilePath);
                 ViewBtn.Visible = false;
             }
 
@@ -116,18 +116,20 @@ namespace FTPWorker
             try
             {
                 Array ftpCfg = Main.ftpInfo.ToArray();
-                FTPInfo ftpInfo = new FTPInfo((string)ftpCfg.GetValue(0), (string)ftpCfg.GetValue(1),
-                    (string)ftpCfg.GetValue(2), (string)ftpCfg.GetValue(3));
+
                 Array args = task.OperaionArgs.ToArray();
                 string operationId = (string)args.GetValue(0);
                 string localFilePath = (string)args.GetValue(1);
                 string remotePath = (string)args.GetValue(2);
                 bool createRemotePath = bool.Parse((string)args.GetValue(3));
 
+                FTPInfo ftpInfo = new FTPInfo((string)ftpCfg.GetValue(0), (string)ftpCfg.GetValue(1),
+                    (string)ftpCfg.GetValue(2), (string)ftpCfg.GetValue(3));
                 client = new FTPClient(ftpInfo)
                 {
                     Operation = FTPClient.FtpOperation.UPLOAD,
-                    OperationArgs = new ArrayList { (string)args.GetValue(1), (string)args.GetValue(2), (string)args.GetValue(3) }
+                    OperationArgs = new ArrayList { (string)args.GetValue(1),
+                        (string)args.GetValue(2), (string)args.GetValue(3) }
                 };
 
                 bool success = client.ChangeRemoteDir(remotePath, createRemotePath);
@@ -166,14 +168,22 @@ namespace FTPWorker
                     state.ResizeBufferSize(GetCorrectBufferSize(state.BUFFER_SIZE, totalSize));
                     while (true)
                     {
+                        // If user click the cancel button, cancel the task
+                        if (backgroundWorker1.CancellationPending)
+                        {
+                            e.Cancel = true;
+                            backgroundWorker1.ReportProgress(0);
+                            return;
+                        }
+
                         bytesSent = fstream.Read(state.buffer, 0, state.BUFFER_SIZE);
 
                         if (bytesSent == 0)
                             break;
 
-                        count += bytesSent;
-
                         requestStream.Write(state.buffer, 0, bytesSent);
+
+                        count += bytesSent;
 
                         progress = (int)(count * 100.0 / totalSize);
 
@@ -215,33 +225,33 @@ namespace FTPWorker
                 }
             }
 #else
-        FTPClient client = null;
-        try {
-            Array ftpCfg = Main.ftpInfo.ToArray();
+            FTPClient client = null;
+            try {
+                Array ftpCfg = Main.ftpInfo.ToArray();
 
-            FTPInfo ftpInfo = new FTPInfo((string)ftpCfg.GetValue(0), (string)ftpCfg.GetValue(1),
-                (string)ftpCfg.GetValue(2), (string)ftpCfg.GetValue(3));
+                Array args = task.OperaionArgs.ToArray();
 
-            Array args = task.OperaionArgs.ToArray();
+                string operationId = (string)args.GetValue(0);
+                string remoteFilePath = (string)args.GetValue(1);
+                string localFilePath = (string)args.GetValue(2);
 
-            string operationId = (string)args.GetValue(0);
-            string remoteFilePath = (string)args.GetValue(1);
-            string localFileFilePath = (string)args.GetValue(2);
+                filePath = localFilePath;
 
-            client = new FTPClient(ftpInfo);
+                FTPInfo ftpInfo = new FTPInfo((string)ftpCfg.GetValue(0), (string)ftpCfg.GetValue(1),
+                    (string)ftpCfg.GetValue(2), (string)ftpCfg.GetValue(3));
+                client = new FTPClient(ftpInfo);
 
-            bool success = client.GetRemoteFileSize(remoteFilePath);
+                bool success = client.GetRemoteFileSize(remoteFilePath);
+                if (!success)
+                    throw client.LastErrorException;
 
-            if (!success)
-                throw client.LastErrorException;
-
-            FTPClient.FtpState state = client.state;
-            FtpWebRequest request = client.GetFtpRequest(client.GetStrUri(remoteFilePath));
-            request.Method = WebRequestMethods.Ftp.DownloadFile;
+                FTPClient.FtpState state = client.state;
+                FtpWebRequest request = client.GetFtpRequest(client.GetStrUri(remoteFilePath));
+                request.Method = WebRequestMethods.Ftp.DownloadFile;
 
                 state.ResizeBufferSize(GetCorrectBufferSize(state.BUFFER_SIZE, state.TotalSize));
 
-                using (FileStream fstream = new FileStream(localFileFilePath, FileMode.Create))
+                using (FileStream fstream = new FileStream(localFilePath, FileMode.Create))
                 using (Stream respStream = request.GetResponse().GetResponseStream())
                 {
                     int progress = 0;
@@ -262,17 +272,17 @@ namespace FTPWorker
                         if (bytesRecv == 0)
                             break;
 
+                        fstream.Write(state.buffer, 0, bytesRecv);
+
                         count += bytesRecv;
 
                         progress = (int)(count * 100.0 / state.TotalSize);
 
                         backgroundWorker1.ReportProgress(progress);
-
-                        fstream.Write(state.buffer, 0, bytesRecv);
                     }
                 }
 
-                e.Result = localFileFilePath;
+                e.Result = localFilePath;
             }
             catch (Exception ex)
             {
@@ -308,23 +318,25 @@ namespace FTPWorker
             if (e.Cancelled)
             {
                 label2.Text = "已取消";
+                ViewBtn.Visible = false;
+                DeleteLocalFile();
             }
             else if (e.Error != null)
             {
                 label2.Text = "发生错误：" + e.Error.Message;
+                ViewBtn.Visible = false;
             }
             else
             {
-                label1.Text = "已完成";
+                label2.Text = "已完成";
+                if (e.Result != null)
+                {
+                    filePath = (string)e.Result;
+                    ViewBtn.Visible = true;
+                    ViewBtn.PerformClick();
+                }
             }
-
             CancelBtn.Enabled = false;
-            if (e.Result != null)
-            {
-                localFilePath = (string)e.Result;
-                ViewBtn.PerformClick();
-                this.Close();
-            }
         }
 
         /// <summary>
@@ -340,6 +352,14 @@ namespace FTPWorker
             }
         }
 
+        private void DeleteLocalFile()
+        {
+            if (filePath != null)
+            {
+                File.Delete(Path.GetFullPath(filePath));
+            }
+        }
+
         /// <summary>
         /// Open File Path
         /// </summary>
@@ -347,10 +367,10 @@ namespace FTPWorker
         /// <param name="e"></param>
         private void ViewBtn_Click(object sender, EventArgs e)
         {
-            if (localFilePath != null)
+            if (filePath != null)
             {
-                string filePath = Path.GetFullPath(localFilePath);
-                string fileExt = Path.GetExtension(localFilePath).ToLower();
+                string localFile = Path.GetFullPath(filePath);
+                string fileExt = Path.GetExtension(localFile).ToLower();
 
                 switch(fileExt)
                 {
@@ -364,20 +384,18 @@ namespace FTPWorker
                     case ".tiff":
                     case ".gif":
                         {
-                            Process.Start("explorer.exe ", filePath);
-                            Log.Logger.Info("Open Picture Command: {0}", "explorer.exe " + filePath);
+                            Process.Start("explorer.exe ", localFile);
+                            Log.Logger.Info("Open Picture Command: {0}", "explorer.exe " + localFile);
                             break;
                         }
                     default:
                         {
-                            string args = "/select, " + filePath;
+                            string args = " /select, " + localFile;
                             Process.Start("explorer.exe", args);
                             Log.Logger.Info("Open File Command: {0}", "explorer.exe " + args);
                             break;
                         }
                 }
-
-
             }
         }
     }

@@ -6,11 +6,13 @@ require("libutils")
 --print(hello)
 
 -- WVVoa2FrMVVTWHBPUkZVeQ==		(hwc123456)
+--[[
 local ftpInfo = {
 	host="127.0.0.1", 
 	user="hwc", 
 	passwd="WVVoa2FrMVVTWHBPUkZVeQ=="
 }
+--]]
 
 local ret, errMsg, operationIdOrError
 
@@ -18,8 +20,8 @@ local ret, errMsg, operationIdOrError
 --print("Set FTP Info", ret, errMsg)
 
 ---[[
---ret, operationIdOrError = libutils.uploadToRemote("D:\\Ice-3.6.3.msi", "/promptboard/", true)
-ret, operationIdOrError = libutils.uploadToRemote("D:\\Trip.jpg", "/promptboard/", true)
+ret, operationIdOrError = libutils.uploadToRemote("D:\\Ice-3.6.3.msi", "/promptboard/", true)
+--ret, operationIdOrError = libutils.uploadToRemote("D:\\Trip.jpg", "/promptboard/", true)
 print("Upload File: ", ret, operationIdOrError)
 --]]
 

@@ -115,6 +115,7 @@
             this.MinimumSize = new System.Drawing.Size(464, 200);
             this.Name = "TaskForm";
             this.Text = "FTP工具";
+            this.TopMost = true;
             this.ResumeLayout(false);
             this.PerformLayout();
 

@@ -61,12 +61,9 @@ namespace FTPWorker
 
         public static void StartFTPTaskWindow(FTPTask task)
         {
-            TaskForm taskForm = new TaskForm(task)
-            {
-                TopMost = true
-            };
-            taskForm.Activate();
+            TaskForm taskForm = new TaskForm(task);
             taskForm.ShowDialog();
+            taskForm.Activate();
         }
 
         protected override void OnClosing(CancelEventArgs e)
