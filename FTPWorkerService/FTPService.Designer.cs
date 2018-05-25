@@ -31,7 +31,6 @@
             this.eventLog1 = new System.Diagnostics.EventLog();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             ((System.ComponentModel.ISupportInitialize)(this.eventLog1)).BeginInit();
-
             // 
             // FTPService
             // 

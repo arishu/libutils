@@ -59,10 +59,11 @@ namespace FTPWorker
             }
         }
 
+        // Start FTP Task Window
         public static void StartFTPTaskWindow(FTPTask task)
         {
             TaskForm taskForm = new TaskForm(task);
-            taskForm.Show();
+            taskForm.ShowDialog();
             taskForm.Activate();
         }
 
@@ -71,7 +72,5 @@ namespace FTPWorker
             base.OnClosing(e);
             cancellationTokenSource.Cancel();
         }
-
-
     }
 }

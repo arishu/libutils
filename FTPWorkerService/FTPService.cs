@@ -1,6 +1,7 @@
 ﻿#region Using Directives
 using System;
 using System.ComponentModel;
+using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -14,8 +15,6 @@ namespace FTPWorkerService
         [DllImport("advapi32.dll", SetLastError = true)]
         private static extern bool SetServiceStatus(IntPtr handle, ref ServiceStatus serviceStatus);
 
-        Process main = null;
-
         private static ApplicationLoader.PROCESS_INFORMATION procInfo;
 
         private static string WORK_DIR = @"D:\workspace\github\libutils\FTPWorker\bin\x64\Debug";
@@ -24,6 +23,10 @@ namespace FTPWorkerService
         public FTPService()
         {
             InitializeComponent();
+
+            // Read config
+            ServiceName = ConfigurationManager.AppSettings["ServiceName"];
+            WORK_DIR = ConfigurationManager.AppSettings["WorkDir"];
 
             eventLog1 = new EventLog();
             if (!EventLog.SourceExists("MySource"))
@@ -46,34 +49,15 @@ namespace FTPWorkerService
             eventLog1.WriteEntry("Starting FTP Worker Service");
 
             //backgroundWorker1.RunWorkerAsync();
-            ApplicationLoader.StartProcessAndBypassUAC(Path.GetFullPath(WORK_DIR + @"\" + MAIN_PROC_NAME), out procInfo);
+            ApplicationLoader.StartProcessAndBypassUAC(Path.GetFullPath(WORK_DIR + MAIN_PROC_NAME), out procInfo);
 
             // Update the service state to Stopped.  
             serviceStatus.dwCurrentState = ServiceState.SERVICE_RUNNING;
             SetServiceStatus(this.ServiceHandle, ref serviceStatus);
         }
 
-        private void RunApplication(/*object sender, DoWorkEventArgs e*/)
-        {
-            
-            main = new Process();
-            main.StartInfo.FileName = MAIN_PROC_NAME;
-            main.StartInfo.WorkingDirectory = WORK_DIR;
-            main.StartInfo.ErrorDialog = true;
-
-            main.Start();
-
-            //main.WaitForExit();
-        }
-
         protected override void OnStop()
         {
-            // Kill the main thread
-            //main.Kill();
-
-            Process.GetProcessById((int)procInfo.dwProcessId).Kill();
-
-
             // Update the service state to Stop Pending.  
             ServiceStatus serviceStatus = new ServiceStatus();
             serviceStatus.dwCurrentState = ServiceState.SERVICE_STOP_PENDING;
@@ -81,6 +65,9 @@ namespace FTPWorkerService
             SetServiceStatus(this.ServiceHandle, ref serviceStatus);
 
             eventLog1.WriteEntry("Stopping FTP Worker Service");
+
+            Process.GetProcessById((int)procInfo.dwProcessId).Kill();
+
 
             // Update the service state to Stopped.  
             serviceStatus.dwCurrentState = ServiceState.SERVICE_STOPPED;

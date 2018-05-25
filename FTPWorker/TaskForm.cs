@@ -4,6 +4,7 @@ using libutilscore.Logging;
 using System;
 using System.Collections;
 using System.ComponentModel;
+using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -17,10 +18,13 @@ namespace FTPWorker
     {
         //private static ArrayList ValidOperations = new ArrayList { "get", "put" };
         private string filePath = null;
+        private string PopPosition = "CurrentScreen";
 
         public TaskForm(FTPTask task)
         {
             InitializeComponent();
+
+            PopPosition = ConfigurationManager.AppSettings["PopPosition"];
 
             string operation = task.Operation;
             if (operation == "get")
@@ -43,21 +47,30 @@ namespace FTPWorker
 
         protected override void OnLoad(EventArgs e)
         {
-            PlaceLowerRight();
+            if (PopPosition == "LastScreen")
+                PlaceOnLastScreenLowerRight();
+            else
+                PlaceOnCurrentScreenLowerRight();
             base.OnLoad(e);
         }
 
         /// <summary>
-        /// Make form show at the bottom corner
+        /// Make form show at the bottom corner of the current screen
         /// </summary>
-        private void PlaceLowerRight()
+        private void PlaceOnCurrentScreenLowerRight()
         {
-            //Determine "rightmost" screen
+            Screen currentScreen = Screen.FromPoint(Cursor.Position);
+            this.Left = currentScreen.WorkingArea.Right - this.Width;
+            this.Top = currentScreen.WorkingArea.Bottom - this.Height;
+        }
 
+        /// <summary>
+        /// Make form show at the bottom corner of the last screen
+        /// </summary>
+        private void PlaceOnLastScreenLowerRight()
+        {
             // Get First Screen
             Screen rightmost = Screen.AllScreens[0];
-
-            //Screen mainScreen = Screen.PrimaryScreen;
 
             // Iterate each screen, 
             foreach (Screen screen in Screen.AllScreens)
