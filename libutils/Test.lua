@@ -6,12 +6,13 @@ local libutils = require("libutils")
 --local hello = libutils.showHello()
 --print(hello)
 
+local ret, errMsg
 -- WVVoa2FrMVVTWHBPUkZVeQ==		(hwc123456)
-local ret, errMsg = libutils.setFtpInfo("127.0.0.1", "hwc", "WVVoa2FrMVVTWHBPUkZVeQ==")
-print("Set FTP Info", ret, errMsg)
+--ret, errMsg = libutils.setFtpInfo("127.0.0.1", "hwc", "WVVoa2FrMVVTWHBPUkZVeQ==")
+--print("Set FTP Info", ret, errMsg)
 
-ret, errMsg = libutils.uploadToRemote("D:\\demo.rar", "/promptboard/sed", false)
-print("Upload File", ret, errMsg)
+local sessionId = libutils.uploadToRemote("D:\\demo.rar", "/promptboard/sed", true)
+print("Upload File: sessionId is ", sessionId)
 
-ret, errMsg = libutils.downloadFromRemote("/background.webp", "D:\\ABCD.webp")
-print("Download File", ret, errMsg)
+sessionId = libutils.downloadFromRemote("/background.webp", "D:\\ABCD.webp")
+print("Download File: sessionId is ", sessionId)

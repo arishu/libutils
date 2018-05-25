@@ -1,11 +1,18 @@
 // ManagedDll.cpp: 定义 DLL 应用程序的导出函数。
 //
 #include "stdafx.h"
+#include "CoreInterface.h"
 #include "ManagedDll.h"
 
+#pragma region Using Directives
 using namespace System;
 using namespace libutilscore::FTP;
 using namespace libutilscore::IO;
+using namespace libutilscore::Core;
+using namespace libutilscore::Net;
+#pragma endregion
+
+#pragma region Helper Functions
 
 /* Convert System::String to standard string */
 static void MarshallString(String ^csstr, std::string &stdstr)
@@ -34,16 +41,19 @@ static String ^ ToSystemString(std::wstring &stdwstr)
 	return gcnew System::String(stdwstr.c_str());
 }
 
+static ExecResult getResult(Tuple<bool, String^> ^ret)
+{
+	ExecResult result;
+	result.isSuccess = ret->Item1;
+	MarshallString(ret->Item2, result.message);
+	return result;
+}
+#pragma endregion
+
+#pragma region ManagedFTP Class
+
 class ManagedFTP
 {
-private:
-	static ExecResult getResult(Tuple<bool, String^> ^ret)
-	{
-		ExecResult result;
-		result.isSuccess = ret->Item1;
-		MarshallString(ret->Item2, result.message);
-		return result;
-	}
 public:
 	static std::string ShowHello()
 	{
@@ -61,22 +71,29 @@ public:
 				ToSystemString(passwd), ToSystemString(remotePath)));
 	}
 
-	static ExecResult UploadToRemote(std::string localPath, std::string remotePath, bool createIfNotExist)
+	static ExecResult GetExecResult(std::string operationId)
 	{
-		if (remotePath == "")
-			return getResult(SharpFTP::UploadToRemote(ToSystemString(localPath), nullptr, createIfNotExist));
-		else
-			return getResult(SharpFTP::
-				UploadToRemote(ToSystemString(localPath), ToSystemString(remotePath), createIfNotExist));
+		return getResult(SharpFTP::GetExecResult(ToSystemString(operationId)));
 	}
 
-	static ExecResult DownloadFromRemote(std::string remotePath, std::string localPath)
+	/*static ExecResult UploadToRemote(std::string localPath, std::string remotePath, bool createIfNotExist)
 	{
-		return getResult(SharpFTP::DownloadFromRemote(ToSystemString(remotePath), ToSystemString(localPath)));
+	if (remotePath == "")
+	return getResult(SharpFTP::UploadToRemote(ToSystemString(localPath), nullptr, createIfNotExist));
+	else
+	return getResult(SharpFTP::
+	UploadToRemote(ToSystemString(localPath), ToSystemString(remotePath), createIfNotExist));
 	}
+
+	static ExecResult DownloadFromRemote(std::string operationId, std::string remotePath, std::string localPath)
+	{
+	return getResult(SharpFTP::DownloadFromRemote(ToSystemString(operationId), ToSystemString(remotePath), ToSystemString(localPath)));
+	}*/
 };
 
+#pragma endregion
 
+#pragma region ManagedIO Class
 class ManagedIO
 {
 private:
@@ -93,10 +110,40 @@ public:
 	}
 };
 
+#pragma endregion
 
-// ******************************************************************************/
-// Exported Functions Here
-// ******************************************************************************/
+#pragma region ManagedProcess Class
+
+class ManagedProcess
+{
+private:
+
+public:
+	static ExecResult RunProgram(std::string fileName, bool showHide,
+		int windowStyle, std::string params)
+	{
+		return getResult(SharpProcess::Create(ToSystemString(fileName),
+			showHide, windowStyle, ToSystemString(params)));
+	}
+};
+
+#pragma endregion
+
+#pragma region ManagedNet Class
+
+class ManagedNet
+{
+public:
+	static ExecResult SendWebResuest(std::string content)
+	{
+		SharpWebClient swc;
+		return getResult(swc.SendWebRequest(ToSystemString(content)));
+	}
+};
+
+#pragma endregion
+
+#pragma region Exported Functions
 
 ///==============================================================================
 /// ManagedFTP
@@ -106,21 +153,29 @@ MANAGEDDLL_FUNC std::string ShowHello()
 	return ManagedFTP::ShowHello();
 }
 
-MANAGEDDLL_FUNC ExecResult SetFtpInfo(std::string host, std::string user,
+MANAGEDDLL_FUNC ExecResult SetFtpInfo(std::string operationId, std::string host, std::string user,
 	std::string passwd, std::string remotePath)
 {
-	return ManagedFTP::SetFtpInfo(host, user, passwd, remotePath);
+	std::string content("");
+	content.append("cfg");
+	content.append("," + operationId + "," + host + "," + user + "," + passwd + "," + remotePath);
+	return ManagedNet::SendWebResuest(content);
 }
 
-MANAGEDDLL_FUNC ExecResult UploadToRemote(std::string localPath, std::string remotePath, bool createIfNotExist)
+MANAGEDDLL_FUNC ExecResult GetExecResult(std::string operationId)
 {
-	return ManagedFTP::UploadToRemote(localPath, remotePath, createIfNotExist);
+	return ManagedFTP::GetExecResult(operationId);
 }
 
-MANAGEDDLL_FUNC ExecResult DownloadFromRemote(std::string remotePath, std::string localPath)
-{
-	return ManagedFTP::DownloadFromRemote(remotePath, localPath);
-}
+//MANAGEDDLL_FUNC ExecResult UploadToRemote(std::string localPath, std::string remotePath, bool createIfNotExist)
+//{
+//	return ManagedFTP::UploadToRemote(localPath, remotePath, createIfNotExist);
+//}
+//
+//MANAGEDDLL_FUNC ExecResult DownloadFromRemote(std::string operationId, std::string remotePath, std::string localPath)
+//{
+//	return ManagedFTP::DownloadFromRemote(operationId, remotePath, localPath);
+//}
 
 
 ///==============================================================================
@@ -135,3 +190,22 @@ MANAGEDDLL_FUNC bool IsDirectoryExist(std::string dirPath)
 {
 	return ManagedIO::IsDirectoryExist(dirPath);
 }
+
+///==============================================================================
+/// ManagedProcess
+///==============================================================================
+MANAGEDDLL_FUNC ExecResult RunProgram(std::string fileName, bool showHide,
+	int windowStyle, std::string params)
+{
+	return ManagedProcess::RunProgram(fileName, showHide, windowStyle, params);
+}
+
+///==============================================================================
+/// ManagedNet
+///==============================================================================
+MANAGEDDLL_FUNC ExecResult SendWebResuest(std::string content)
+{
+	return ManagedNet::SendWebResuest(content);
+}
+
+#pragma endregion

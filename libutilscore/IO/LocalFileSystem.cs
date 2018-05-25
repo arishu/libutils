@@ -1,13 +1,14 @@
 ﻿
+#region Using directives
 using System;
 using System.IO;
 using libutilscore.Logging;
+#endregion
 
 namespace libutilscore.IO
 {
-    public static class LocalFileSystem
+    public class LocalFileSystem
     {
-
         /// <summary>
         /// check whether file exists
         /// </summary>
@@ -16,7 +17,7 @@ namespace libutilscore.IO
         public static bool IsFileExist(string filePath)
         {
             bool exist = File.Exists(filePath);
-            Log.logger.Info("Checking File {0} Exist? {1}", filePath, exist);
+            Log.Logger.Info("Checking File {0} Exist? {1}", filePath, exist);
             return exist;
         }
 
@@ -28,7 +29,7 @@ namespace libutilscore.IO
         public static bool IsDirectoryExist(string dirPath)
         {
             bool exist = Directory.Exists(dirPath);
-            Log.logger.Info("Checking Directory {0} Exist? {1}", dirPath, exist);
+            Log.Logger.Info("Checking Directory {0} Exist? {1}", dirPath, exist);
             return exist;
         }
 

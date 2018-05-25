@@ -164,6 +164,11 @@
     </ClCompile>
     <ClCompile Include="TestApp.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\libutilscore\libutilscore.csproj">
+      <Project>{72dd46dd-16f4-4e3f-9b40-d652bf0486ef}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
