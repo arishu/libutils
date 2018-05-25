@@ -27,6 +27,8 @@ namespace FTPWorker
 
         public static CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
+        private static int SocketPort = 55505;
+
         public Main()
         {
             InitializeComponent();
@@ -50,7 +52,9 @@ namespace FTPWorker
                 ftpInfo = new ArrayList { ftpHost, ftpUser, ftpPasswd, ftpRemotePath };
 
                 Log.Logger.Debug("Start Server in default");
-                TcpServer server = new TcpServer(55505);
+
+                SocketPort = int.Parse(ConfigurationManager.AppSettings["SocketPort"]);
+                TcpServer server = new TcpServer(SocketPort);
                 server._StartSocket();
             }
             catch (Exception ex)
@@ -59,6 +63,10 @@ namespace FTPWorker
             }
         }
 
+        /// <summary>
+        /// Open FTP Task Window
+        /// </summary>
+        /// <param name="task"></param>
         public static void StartFTPTaskWindow(FTPTask task)
         {
             TaskForm taskForm = new TaskForm(task);
@@ -71,7 +79,5 @@ namespace FTPWorker
             cancellationTokenSource.Cancel();
             base.OnClosing(e);
         }
-
-
     }
 }

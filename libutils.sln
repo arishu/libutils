@@ -6,6 +6,10 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "libutilscore", "libutilscore\libutilscore.csproj", "{72DD46DD-16F4-4E3F-9B40-D652BF0486EF}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libutils", "libutils\libutils.vcxproj", "{D854DDBB-B82C-4786-9270-DD94459794AE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{CBBC73A8-59BD-4708-8014-36C260798ED3} = {CBBC73A8-59BD-4708-8014-36C260798ED3}
+		{72DD46DD-16F4-4E3F-9B40-D652BF0486EF} = {72DD46DD-16F4-4E3F-9B40-D652BF0486EF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestApp", "TestApp\TestApp.vcxproj", "{AB055B8D-1816-44E4-AD12-AF0F1419D2E5}"
 EndProject
@@ -16,6 +20,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FTPWorker", "FTPWorker\FTPWorker.csproj", "{6F65C771-1E63-4E67-9158-3C7CB1C6676F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FTPWorkerService", "FTPWorkerService\FTPWorkerService.csproj", "{56FB3E7A-B5B5-41B2-ACAA-33E29F320590}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6F65C771-1E63-4E67-9158-3C7CB1C6676F} = {6F65C771-1E63-4E67-9158-3C7CB1C6676F}
+		{72DD46DD-16F4-4E3F-9B40-D652BF0486EF} = {72DD46DD-16F4-4E3F-9B40-D652BF0486EF}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

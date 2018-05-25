@@ -1,4 +1,5 @@
-﻿using System;
+﻿#region Using Directives
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -13,6 +14,8 @@ using libutilscore.FTP;
 using System.Net;
 using System.Diagnostics;
 using libutilscore.Logging;
+using System.Configuration;
+#endregion
 
 namespace FTPWorker
 {
@@ -20,6 +23,7 @@ namespace FTPWorker
     {
         private static ArrayList ValidOperations = new ArrayList { "get", "put" };
         private string filePath = null;
+        private string PopPosition = "CurrentScreen";
 
         public TaskForm(FTPTask task)
         {
@@ -31,6 +35,7 @@ namespace FTPWorker
                 string localFilePath = (string)task.OperaionArgs.ToArray().GetValue(2);
                 label1.Text = "下载：" + Path.GetFileName(localFilePath);
                 ViewBtn.Visible = true;
+                ViewBtn.Enabled = false;
             }
             else if (operation == "put")
             {
@@ -39,17 +44,29 @@ namespace FTPWorker
                 ViewBtn.Visible = false;
             }
 
-
+            // Asynchronouslly Run Task in BackgroundWorker
             backgroundWorker1.RunWorkerAsync(task);
         }
 
+        /// <summary>
+        /// Called when this form be loaded
+        /// </summary>
+        /// <param name="e"></param>
         protected override void OnLoad(EventArgs e)
         {
-            PlaceLowerRight();
+            PopPosition = ConfigurationManager.AppSettings["PopPosition"];
+
+            if (PopPosition == "LastScreen")
+                PlaceOnLastScreenLowerRight();
+            else
+                PlaceOnCurrentScreenLowerRight();
             base.OnLoad(e);
         }
 
-        private void PlaceLowerRight()
+        /// <summary>
+        /// Show form on Last screen's bottom-right corner
+        /// </summary>
+        private void PlaceOnLastScreenLowerRight()
         {
             //Determine "rightmost" screen
             Screen rightmost = Screen.AllScreens[0];
@@ -58,9 +75,18 @@ namespace FTPWorker
                 if (screen.WorkingArea.Right > rightmost.WorkingArea.Right)
                     rightmost = screen;
             }
-
             this.Left = rightmost.WorkingArea.Right - this.Width;
             this.Top = rightmost.WorkingArea.Bottom - this.Height;
+        }
+
+        /// <summary>
+        /// Show form on current screen's bottom-right corner
+        /// </summary>
+        private void PlaceOnCurrentScreenLowerRight()
+        {
+            Screen currentScreen = Screen.FromPoint(Cursor.Position);
+            this.Left = currentScreen.WorkingArea.Right - this.Width;
+            this.Top = currentScreen.WorkingArea.Bottom - this.Height;
         }
 
 
@@ -89,18 +115,24 @@ namespace FTPWorker
             }
         }
 
-        private int GetCorrectBufferSize(int originnal, long totalSize)
+        /// <summary>
+        /// Get correct Buffer size
+        /// </summary>
+        /// <param name="originalSize"></param>
+        /// <param name="totalSize"></param>
+        /// <returns></returns>
+        private int GetCorrectBufferSize(int originalSize, long totalSize)
         {
-            int times = (int)(Math.Sqrt(totalSize) / originnal);
+            int times = (int)(Math.Sqrt(totalSize) / originalSize);
             Log.Logger.Debug("File Size is ({0}) times to the buffer", times);
             int adjustBufferSize = 1024;
             if (times > 10)
             {
-                adjustBufferSize = originnal * 10;
+                adjustBufferSize = originalSize * 10;
             }
             else if (times >= 4)
             {
-                adjustBufferSize = originnal;
+                adjustBufferSize = originalSize;
             }
             else
             {
@@ -110,6 +142,11 @@ namespace FTPWorker
             return adjustBufferSize;
         }
 
+        /// <summary>
+        /// Do Upload File
+        /// </summary>
+        /// <param name="task"></param>
+        /// <param name="e"></param>
         private void DoUpload(FTPTask task, DoWorkEventArgs e)
         {
             FTPClient client = null;
@@ -161,7 +198,7 @@ namespace FTPWorker
                 using (Stream requestStream = request.GetRequestStream())
                 {
                     int bytesSent = 0;
-                    int count = 0;
+                    long count = 0;
                     int progress = 0;
                     long totalSize = fstream.Length;
                     
@@ -185,7 +222,7 @@ namespace FTPWorker
 
                         count += bytesSent;
 
-                        progress = (int)(count * 100.0 / totalSize);
+                        progress = (int)((float)count / (float)totalSize * 100.0);
 
                         backgroundWorker1.ReportProgress(progress);
                     }
@@ -206,6 +243,11 @@ namespace FTPWorker
             }
         }
 
+        /// <summary>
+        /// Do Download Operation
+        /// </summary>
+        /// <param name="task"></param>
+        /// <param name="e"></param>
         private void DoDownload(FTPTask task, DoWorkEventArgs e)
         {
 #if __DEBUG
@@ -276,7 +318,7 @@ namespace FTPWorker
 
                         count += bytesRecv;
 
-                        progress = (int)(count * 100.0 / state.TotalSize);
+                        progress = (int)((float)count / (float)state.TotalSize * 100.0);
 
                         backgroundWorker1.ReportProgress(progress);
                     }
@@ -309,34 +351,41 @@ namespace FTPWorker
         }
 
         /// <summary>
-        /// Operation Finished
+        /// BackgroundWorker's Completed Method
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void BackgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
+            // Note: when user cancelled the operation or error occurred,
+            // do not use e.Result
+            CancelBtn.Enabled = false;
             if (e.Cancelled)
             {
                 label2.Text = "已取消";
+                label2.ForeColor = Color.Red;
+                label2.Font = new Font("微软雅黑", 9F, FontStyle.Bold, GraphicsUnit.Point, ((byte)134));
                 ViewBtn.Visible = false;
                 DeleteLocalFile();
             }
             else if (e.Error != null)
             {
                 label2.Text = "发生错误：" + e.Error.Message;
+                label2.ForeColor = Color.Red;
+                label2.Font = new Font("微软雅黑", 9F, FontStyle.Bold, GraphicsUnit.Point, ((byte)134));
                 ViewBtn.Visible = false;
             }
             else
             {
-                label2.Text = "已完成";
+                label1.Text = "已完成";
+                label1.Font = new Font("微软雅黑", 9F, FontStyle.Bold, GraphicsUnit.Point, ((byte)134));
                 if (e.Result != null)
                 {
                     filePath = (string)e.Result;
-                    ViewBtn.Visible = true;
+                    ViewBtn.Enabled = true;
                     ViewBtn.PerformClick();
                 }
             }
-            CancelBtn.Enabled = false;
         }
 
         /// <summary>
@@ -352,6 +401,9 @@ namespace FTPWorker
             }
         }
 
+        /// <summary>
+        /// Delete Local Uncomplete file when user cancelled download operation
+        /// </summary>
         private void DeleteLocalFile()
         {
             if (filePath != null)

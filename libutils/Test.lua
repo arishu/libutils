@@ -19,14 +19,14 @@ local ret, errMsg, operationIdOrError
 --local ret, errMsg = libutils.setFtpInfo(ftpInfo)
 --print("Set FTP Info", ret, errMsg)
 
----[[
+--[[
 ret, operationIdOrError = libutils.uploadToRemote("D:\\Ice-3.6.3.msi", "/promptboard/", true)
 --ret, operationIdOrError = libutils.uploadToRemote("D:\\Trip.jpg", "/promptboard/", true)
 print("Upload File: ", ret, operationIdOrError)
 --]]
 
 
---[[
+---[[
 ret, operationIdOrError = libutils.downloadFromRemote("/promptboard/Ice-3.6.3.msi", "D:\\Ice-3.6.3-bak.msi")
 print("Download File: ", ret, operationIdOrError)
 --]]

@@ -1,33 +1,33 @@
+@ECHO OFF
 
-@echo on
+REM Set tool path to environment
+set ServicePath="%~dp0FTPWorkerService.exe"
+set INSTALLER="C:\Windows\Microsoft.NET\Framework\v4.0.30319"
+set PATH=%PATH%;%INSTALLER%
 
-set LOCATION="home"
-
-if %LOCATION% == "home" (
-	set DST="D:\Program Files\Aris\FTPWorker\"
-) else (
-	set DST="D:\casco\ssip\bin\"
+REM Begin to install the service
+echo ----------------------------------------------------------------------
+:Main
+if "%~1"=="install" (
+	REM Starting install FTPWorkerService
+	installutil %ServicePath%
+	GOTO End
 )
 
-%~d0
-
-cd "%DST%"
-
-set Service=FTPWorkerService.exe
-set Operation="%1"
-
-@echo off
-
-if EXIST %Operation% (
-	if "%Operation%" == "install" (
-		installutil %Service%
-	) else if "%Operation%" == "remove" (
-		installutil /u %Service%
-	) else (
-		echo "Usage1: install or remove"
-	)
-) else (
-	echo "Usage2: install or remove"
+if "%~1"=="remove" (
+	REM Starting uninstall FTPWorkerService
+	installutil /u %ServicePath%
+	GOTO End
 )
+echo ----------------------------------------------------------------------
+
+GOTO Usage
+
+
+
+:Usage
+	echo "Usage: installutil install | remove"
+
+:End
 
 pause

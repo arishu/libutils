@@ -17,7 +17,7 @@ namespace FTPWorkerService
 
         private static ApplicationLoader.PROCESS_INFORMATION procInfo;
 
-        private static string WORK_DIR = @"C:\";
+        private static string WORK_DIR = @"D:\";
         private static string MAIN_PROC_NAME = "FTPWorker.exe";
 
         public FTPService(string[] args)
@@ -54,7 +54,7 @@ namespace FTPWorkerService
             eventLog1.WriteEntry("Starting FTP Worker Service");
 
             // Use CreateProcessAsUser method to create the main thread
-            ApplicationLoader.StartProcessAndBypassUAC(Path.GetFullPath(WORK_DIR + @"\" + MAIN_PROC_NAME), out procInfo);
+            ApplicationLoader.StartProcessAndBypassUAC(Path.GetFullPath(WORK_DIR + MAIN_PROC_NAME), out procInfo);
 
             // Update the service state to Stopped.  
             serviceStatus.dwCurrentState = ServiceState.SERVICE_RUNNING;
