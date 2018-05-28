@@ -23,8 +23,6 @@ echo ----------------------------------------------------------------------
 
 GOTO Usage
 
-
-
 :Usage
 	echo "Usage: installutil install | remove"
 

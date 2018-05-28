@@ -19,6 +19,11 @@ if %LOCATION% == "home" (
 	set COPY_OPTIONS=/Y /S /F
 )
 
+REM Try create the directory If directory not exist
+if NOT EXIST %DST% (
+	MKDIR %DST%
+)
+
 :Home
 	xcopy "%MAIN_HOME%Install_Uninstall_Service.bat" %DST% %COPY_OPTIONS%
 
