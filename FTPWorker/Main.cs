@@ -24,6 +24,7 @@ namespace FTPWorker
                 "127.0.0.1", "anonymous",
                 "V1ZjMWRtSnViSFJpTTFaNlVVUkZlVTU1TkhkTWFrRjFUVkU5UFE9PQ ==", "/"
         };
+        private static int SocketPort = 55505;
 
         public static CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
@@ -31,9 +32,24 @@ namespace FTPWorker
         {
             InitializeComponent();
 
+            // Do not show the main form and run in background
+            this.FormBorderStyle = FormBorderStyle.None;
+            this.ShowInTaskbar = false;
+            this.Load += new EventHandler(CustomFormLoad);
+            this.Visible = false;
+
             ThreadPool.QueueUserWorkItem(new WaitCallback(DefaultStart));
             //DefaultStart();
-            this.Visible = false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CustomFormLoad(object sender, EventArgs e)
+        {
+            this.Size = new Size(0, 0);
         }
 
         static void DefaultStart(object obj)
@@ -50,8 +66,9 @@ namespace FTPWorker
 
                 ftpInfo = new ArrayList { ftpHost, ftpUser, ftpPasswd, ftpRemotePath };
 
+                SocketPort = int.Parse(ConfigurationManager.AppSettings["SocketPort"]);
                 Log.Logger.Debug("Start Server in default");
-                TcpServer server = new TcpServer(55505);
+                TcpServer server = new TcpServer(SocketPort);
                 server._StartSocket();
             }
             catch (Exception ex)

@@ -9,10 +9,8 @@ set MAIN_HOME="%~dp0"
 
 cd "..\FTPWorker\bin\x64\Debug"
 
-set LOCATION="company"
-
 REM Which branch to use
-set LOCATION="home"
+set LOCATION="company"
 if %LOCATION% == "home" (
 	set DST="D:\Program Files\Aris\FTPWorker\"
 	set COPY_OPTIONS=/Y /S /F
