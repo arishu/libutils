@@ -25,11 +25,9 @@ if "%~1"=="remove" (
 	installutil /u %ServicePath%
 	GOTO End
 )
-
-GOTO Usage
-
 echo ----------------------------------------------------------------------
 
+GOTO Usage
 
 :Usage
 	echo "Usage: installutil install | remove"

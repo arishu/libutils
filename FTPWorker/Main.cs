@@ -33,6 +33,7 @@ namespace FTPWorker
 
             ThreadPool.QueueUserWorkItem(new WaitCallback(DefaultStart));
             //DefaultStart();
+            this.Visible = false;
         }
 
         static void DefaultStart(object obj)

@@ -54,6 +54,7 @@
             this.MaximumSize = new System.Drawing.Size(500, 280);
             this.MinimumSize = new System.Drawing.Size(500, 280);
             this.Name = "Main";
+            this.Opacity = 0D;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "FTP工具";
